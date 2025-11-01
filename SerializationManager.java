@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 public class SerializationManager {
@@ -27,5 +28,17 @@ public class SerializationManager {
         }
         catch(Exception _e) { System.out.println("Reading File Error: " + _e.getMessage()); }
         return buffer;
+    }
+
+    public static void WriteFile(String _path, String _content, boolean _append) {
+
+        try {
+
+            File f = new File(_path);
+            FileOutputStream fos = new FileOutputStream(f, _append);
+            fos.write(_content.getBytes());
+            fos.close();
+        }
+        catch(Exception _e) { System.out.println("Writing File Error: " + _e.getMessage()); }
     }
 }

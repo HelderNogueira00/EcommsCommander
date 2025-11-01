@@ -6,4 +6,7 @@ public final class EnumsList {
 
     public static final int AGENT_COMMANDER = 3;
     public static final int AGENT_ANDROID_REMOTE = 4;   
+
+    public static final int AUTHENTICATION_GRANTED = 5;
+    public static final int AUTHENTICATION_DENIED = 6;
 }

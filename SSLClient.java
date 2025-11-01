@@ -18,7 +18,7 @@ public abstract class SSLClient {
     private final int SERVER_PORT;
     private final String SERVER_IP;
 
-    private SSLSocket mSocket;
+    protected SSLSocket mSocket;
     private SSLContext mContext;
     private InputStream mInput;
     private OutputStream mOutput;
@@ -73,7 +73,7 @@ public abstract class SSLClient {
             isRunning = true;
             mInput = mSocket.getInputStream();
             mOutput = mSocket.getOutputStream();
-            System.out.println("Agent Connected");
+            System.out.println("SERVER: Connection Received, Waiting Auth");
 
             new Thread(new Runnable() { @Override public void run() { receive(); }}).start();
             onConnected();

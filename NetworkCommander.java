@@ -13,7 +13,8 @@ public class NetworkCommander extends SSLClient {
     public NetworkCommander() {
 
         super("10.8.0.1", 4520);
-        INSTANCE = this;   
+        INSTANCE = this;
+        System.out.println("AGENT: Commander OK " + NetworkCommander.INSTANCE);
     }
 
     protected void onConnected() {}
@@ -43,7 +44,13 @@ public class NetworkCommander extends SSLClient {
         }
         else {
 
-            System.out.println("Agent Auth Result: " + _pck.readInt());
+            if(_pck.readInt() == EnumsList.AUTHENTICATION_GRANTED) {
+
+                System.out.println("SERVER: Authentication was Granted!");
+                return;
+            }
+            
+            System.out.println("SERVER: Authentication was Denied, Disconnecting!");
         }
     }
 
@@ -83,5 +90,6 @@ public class NetworkCommander extends SSLClient {
         send(pck);
     }
 
+    public boolean isActive() { return mSocket != null; }
     public static NetworkCommander getInstance() { return INSTANCE; }
 }
