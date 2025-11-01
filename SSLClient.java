@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.security.KeyStore;
+import java.util.ArrayList;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -12,7 +13,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
-public class SSLClient {
+public abstract class SSLClient {
     
     private final int SERVER_PORT;
     private final String SERVER_IP;
@@ -74,7 +75,8 @@ public class SSLClient {
             mOutput = mSocket.getOutputStream();
             System.out.println("Agent Connected");
 
-            receive();
+            new Thread(new Runnable() { @Override public void run() { receive(); }}).start();
+            onConnected();
         }
         catch(Exception _e) { System.out.println("SSLClient Connect Error: " + _e.getMessage()); }
     }
@@ -100,12 +102,27 @@ public class SSLClient {
             if(mInput == null)
                 return;
 
-            byte[] lengthBuffer = new byte[4];
-            mInput.read(lengthBuffer);
+            ArrayList<Byte> receivedBuffer = new ArrayList<>();
+            while(receivedBuffer.size() < 4) {
 
-            int length = ByteBuffer.allocate(4).put(lengthBuffer).getInt();
-            System.out.println("Packet Length: " + length);
+                byte val = (byte)mInput.read();
+                if(val == -1)
+                    disconnect("Null byte received!");
+                
+                    receivedBuffer.add(val);
+            }
+            
+            int pckLength = ByteBuffer.allocate(4).put(UtilsManager.ToByteArray(receivedBuffer)).getInt(0);
+            while(receivedBuffer.size() < pckLength + 4) {
 
+                byte val = (byte)mInput.read();
+                if(val == -1)
+                    disconnect("Null byte received!");
+                
+                receivedBuffer.add(val);
+            }
+
+            onPacketReceived(new NetworkPacket(receivedBuffer));
             receive();
         }
         catch(Exception _e) { System.out.println("Client Receiving Error: " + _e.getMessage()); }
@@ -125,8 +142,13 @@ public class SSLClient {
             mInput = null;
             mOutput = null;
             mSocket = null;
+
+            return;
         }
         catch(Exception _e) { System.out.println("Client Disconnected: " + _err); }
     } 
 
+    protected abstract void onConnected();
+    protected abstract void onDisconnected();
+    protected abstract void onPacketReceived(NetworkPacket _pck);
 }
