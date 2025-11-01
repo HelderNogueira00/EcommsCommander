@@ -29,11 +29,14 @@ public class NetworkPacket {
             return null;
 
         isFinalized = true;
-        write(mBuffer.size());
+        byte[] buffer = new byte[mBuffer.size() + 4];
+        byte[] lengthBuffer = ByteBuffer.allocate(4).putInt(mBuffer.size()).array();
 
-        byte[] buffer = new byte[mBuffer.size()];
+        for(int n = 0; n < lengthBuffer.length; n++)
+            buffer[n] = lengthBuffer[n];
+
         for(int n = 0; n < mBuffer.size(); n++)
-            buffer[n] = mBuffer.get(n);
+            buffer[n] = mBuffer.get(n + 4);
         
         return buffer;
     }
