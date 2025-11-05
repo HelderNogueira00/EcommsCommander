@@ -1,6 +1,8 @@
 package com.ecomms.commander;
 
-import org.checkerframework.checker.units.qual.Length;
+import com.ecomms.commander.DownloadsManager;
+import com.ecomms.commander.NetworkPacket;
+import com.ecomms.commander.NewItem;
 
 public class NetworkCommander extends SSLClient {
     
@@ -19,12 +21,16 @@ public class NetworkCommander extends SSLClient {
         public static final int OnNotification = 13;
     }
 
+    private DownloadsManager downloadsManager;
     private static NetworkCommander INSTANCE;
 
     public NetworkCommander() {
 
         super("10.8.0.1", 4520);
         INSTANCE = this;
+        downloadsManager = new DownloadsManager(10);
+        downloadsManager.load();
+
         System.out.println("AGENT: Commander OK " + NetworkCommander.INSTANCE);
     }
 
@@ -42,7 +48,21 @@ public class NetworkCommander extends SSLClient {
             case Commands.AgentConnected: onAgentConnected(_pck); break;
             case Commands.FileExists: onFileExistsReceived(_pck); break;
             case Commands.OnTransferData: onTransferData(_pck); break;
+            case Commands.OnTransferStart: onTransferStart(_pck); break;            
+            case Commands.OnTransferEnd: onTransferEnd(_pck); break;
         }
+    }
+
+    private void onTransferEnd(NetworkPacket _pck) {
+
+        int itemID = _pck.readInt();
+        int readPos = _pck.readInt();
+        System.out.println("TTRansfer Finalized");
+        NewItem item = DownloadsManager.getInstance().getNewItem(itemID);
+        NetworkPacket pck = new NetworkPacket(Commands.OnTransferEnd);
+        pck.write(itemID);
+        pck.write(item.readPos == readPos);
+        send(pck);
     }
 
     private void onTransferData(NetworkPacket _pck) {
@@ -52,6 +72,7 @@ public class NetworkCommander extends SSLClient {
         byte[] buffer = _pck.readBytes(bufferLength);
 
         long writtenLength = DownloadsManager.getInstance().getNewItem(itemID).writeBlock(buffer);
+        System.out.println("TTRansfer ion progress: " + writtenLength);
         NetworkPacket pck = new NetworkPacket(Commands.OnTransferData);
         pck.write(itemID);
         pck.write(writtenLength);
@@ -131,12 +152,14 @@ public class NetworkCommander extends SSLClient {
         if(SerializationManager.FileExists(path)) {
 
             //Send End
+            System.out.println("TRansfer cancelled, file already exists!");
             return;
         }
 
         NewItem item = new NewItem(itemID, length, path);
         DownloadsManager.getInstance().addItem(item);
 
+        System.out.println("Starting transfer ...");
         NetworkPacket pck = new NetworkPacket(Commands.OnTransferStart);
         pck.write(itemID);
         pck.write(true);

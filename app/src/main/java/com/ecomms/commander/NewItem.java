@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 public class NewItem {
 
         public int id;
-        private long readPos;
+        public long readPos;
         private long length;
         private String path;
 

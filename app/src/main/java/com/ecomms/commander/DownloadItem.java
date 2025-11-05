@@ -1,6 +1,4 @@
 package com.ecomms.commander;
-
-
 import java.io.File;
 
  public class DownloadItem {
